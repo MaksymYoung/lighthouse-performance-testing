@@ -53,6 +53,14 @@ const timeouts = {
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
+function gaussianPause(mean = 100, standardDeviation = 25, min = 30, max = 250) {
+  const standardNormalValue = Math.sqrt(-2 * Math.log(Math.random()))
+    * Math.cos(2 * Math.PI * Math.random());
+  const pause = mean + standardDeviation * standardNormalValue;
+
+  return Math.min(max, Math.max(min, pause));
+}
+
 async function waitTillHTMLRendered(page, timeout = timeouts.htmlRendered) { // waiting for a full page load
   const checkDurationMsecs = timeouts.htmlCheckInterval; // if the page size doesn't change (several checks), then the page is fully loaded
   const maxChecks = timeout / checkDurationMsecs;
@@ -102,7 +110,7 @@ async function clickAndWait(page, selector, options = {}) { // click element and
 async function fillField(page, selector, value) { // fill field using click first, fallback if element is not clickable
   await page.waitForSelector(selector, { visible: true });
   await page.$eval(selector, (element) => element.scrollIntoView({ block: 'center' }));
-  await sleep(100);
+  await sleep(gaussianPause());
 
   try {
     await page.click(selector, { clickCount: 3 });
@@ -225,7 +233,7 @@ async function submitCheckoutOrder(page) { // submit checkout form even if the b
 
   try {
     await page.$eval(selectors.placeOrderSubmit, (button) => button.scrollIntoView({ block: 'center' }));
-    await sleep(100);
+    await sleep(gaussianPause());
     await page.click(selectors.placeOrderSubmit);
   } catch (error) {
     await page.$eval(selectors.placeOrderSubmit, (button) => {
